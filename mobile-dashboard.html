@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1e40af">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>NL-PowerPredict v3.0 - Nederlandse Elektriciteitsprijs Voorspelling</title>
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1e40af;
+            --secondary: #3730a3;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1f2937;
+            --light: #f3f4f6;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .header {
+            background: var(--white);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .status-item {
+            flex: 1;
+            min-width: 100px;
+            background: var(--light);
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+
+        .status-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .status-value {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--dark);
+        }
+
+        .price-card {
+            background: var(--white);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .current-price {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 0.75rem;
+            color: white;
+        }
+
+        .price-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .price-value {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+
+        .price-unit {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .battery-recommendation {
+            background: var(--white);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .battery-action {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .action-charge {
+            background: var(--success);
+        }
+
+        .action-discharge {
+            background: var(--warning);
+        }
+
+        .action-hold {
+            background: var(--dark);
+        }
+
+        .chart-container {
+            background: var(--white);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            overflow-x: auto;
+        }
+
+        .chart-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            background: var(--light);
+            color: var(--dark);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+
+        .chart-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        #priceChart {
+            width: 100%;
+            height: 300px;
+            position: relative;
+        }
+
+        .config-panel {
+            background: var(--white);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .config-item {
+            margin-bottom: 1.5rem;
+        }
+
+        .config-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .config-value {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .slider {
+            width: 100%;
+            height: 40px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--light);
+            border-radius: 20px;
+            outline: none;
+            padding: 0 10px;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 30px;
+            height: 30px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid var(--light);
+            border-radius: 0.5rem;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mode-btn.active {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: white;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: white;
+            opacity: 0.9;
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid var(--light);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Pull to refresh */
+        .pull-to-refresh {
+            position: fixed;
+            top: -60px;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            color: white;
+            transition: transform 0.3s;
+            z-index: 999;
+        }
+
+        .pull-to-refresh.visible {
+            transform: translateY(60px);
+        }
+
+        /* Responsive desktop view */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 1200px;
+                padding: 2rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .dashboard-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+
+            .chart-container {
+                grid-column: span 2;
+            }
+
+            #priceChart {
+                height: 400px;
+            }
+        }
+
+        /* PWA install prompt */
+        .install-prompt {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .install-prompt button {
+            background: white;
+            color: var(--primary);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 1rem;
+            margin-left: 1rem;
+            cursor: pointer;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="pull-to-refresh" id="pullToRefresh">
+        <span>🔄 Vernieuwen...</span>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>⚡ NL-PowerPredict v3.0</h1>
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-label">Bron</div>
+                    <div class="status-value" id="dataSource">--</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Model</div>
+                    <div class="status-value" id="modelStatus">--</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Update</div>
+                    <div class="status-value" id="lastUpdate">--</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="price-card">
+                <div class="current-price">
+                    <div class="price-label">Huidige Prijs</div>
+                    <div class="price-value" id="currentPrice">--</div>
+                    <div class="price-unit">cent/kWh</div>
+                </div>
+            </div>
+
+            <div class="battery-recommendation">
+                <h3>🔋 Batterij Advies (60 kWh)</h3>
+                <div class="battery-action" id="batteryAction">
+                    <span id="batteryText">Laden...</span>
+                </div>
+                <div id="batteryReason" style="text-align: center; color: #6b7280;">--</div>
+            </div>
+
+            <div class="chart-container">
+                <h3>📊 Prijsvoorspelling</h3>
+                <div class="chart-controls">
+                    <button class="chart-btn active" data-hours="24">24 uur</button>
+                    <button class="chart-btn" data-hours="48">48 uur</button>
+                    <button class="chart-btn" data-hours="96">96 uur (4 dagen)</button>
+                </div>
+                <canvas id="priceChart"></canvas>
+            </div>
+
+            <div class="config-panel">
+                <h3>⚙️ Configuratie</h3>
+
+                <div class="config-item">
+                    <label class="config-label">Bedrijfsmodus</label>
+                    <div class="mode-selector">
+                        <button class="mode-btn active" data-mode="auto">Auto</button>
+                        <button class="mode-btn" data-mode="manual">Handmatig</button>
+                        <button class="mode-btn" data-mode="hybrid">Hybride</button>
+                    </div>
+                </div>
+
+                <div class="config-item">
+                    <label class="config-label">Chronos Gewicht</label>
+                    <div class="config-value">Waarde: <span id="chronosValue">0.65</span></div>
+                    <input type="range" class="slider" id="chronosWeight" min="0.5" max="0.8" step="0.05" value="0.65">
+                </div>
+
+                <div class="config-item">
+                    <label class="config-label">Weer Gewicht</label>
+                    <div class="config-value">Waarde: <span id="weatherValue">0.35</span></div>
+                    <input type="range" class="slider" id="weatherWeight" min="0.2" max="0.5" step="0.05" value="0.35">
+                </div>
+
+                <div class="config-item">
+                    <label class="config-label">Seizoensaanpassing</label>
+                    <div class="config-value">Waarde: <span id="seasonalValue">0%</span></div>
+                    <input type="range" class="slider" id="seasonalAdjustment" min="-20" max="20" step="1" value="0">
+                </div>
+
+                <div class="config-item">
+                    <label class="config-label">Weekend Modifier</label>
+                    <div class="config-value">Waarde: <span id="weekendValue">0%</span></div>
+                    <input type="range" class="slider" id="weekendModifier" min="-15" max="15" step="1" value="0">
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 NL-PowerPredict | Versie 3.0</p>
+            <p>Geoptimaliseerd voor 60 kWh Victron Batterij</p>
+        </div>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p style="margin-top: 1rem; text-align: center;">Voorspellingen laden...</p>
+    </div>
+
+    <div class="install-prompt" id="installPrompt">
+        <span>Installeer NL-PowerPredict</span>
+        <button id="installBtn">Installeer</button>
+    </div>
+
+    <script>
+        // Global variables
+        let chart = null;
+        let predictions = [];
+        let currentView = 24;
+        let pullDistance = 0;
+        let isPulling = false;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeChart();
+            loadPredictions();
+            initializeControls();
+            initializePullToRefresh();
+            checkPWAInstall();
+
+            // Auto-refresh every 5 minutes
+            setInterval(loadPredictions, 300000);
+        });
+
+        // Initialize Chart.js
+        function initializeChart() {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Elektriciteitsprijs (€/MWh)',
+                        data: [],
+                        borderColor: '#1e40af',
+                        backgroundColor: 'rgba(30, 64, 175, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.parsed.y.toFixed(2)} €/MWh (${(context.parsed.y/10).toFixed(2)} cent/kWh)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Prijs (€/MWh)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Load predictions from API
+        async function loadPredictions() {
+            showLoading(true);
+
+            try {
+                const response = await fetch('/api/predictions/next96');
+                const data = await response.json();
+
+                predictions = data.predictions;
+                updateDisplay();
+                updateChart();
+
+                // Update status
+                document.getElementById('dataSource').textContent = data.source || 'Simulatie';
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('nl-NL', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                // Check model status
+                const statusResponse = await fetch('/api/system/status');
+                const status = await statusResponse.json();
+                document.getElementById('modelStatus').textContent = status.model_loaded ? 'Actief' : 'Fallback';
+
+            } catch (error) {
+                console.error('Error loading predictions:', error);
+                showError('Kon voorspellingen niet laden');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Update display
+        function updateDisplay() {
+            if (!predictions || predictions.length === 0) return;
+
+            // Current price
+            const currentPrice = predictions[0];
+            document.getElementById('currentPrice').textContent = currentPrice.price_cent_kwh.toFixed(2);
+
+            // Battery recommendation
+            const action = currentPrice.battery_action;
+            const batteryAction = document.getElementById('batteryAction');
+            const batteryText = document.getElementById('batteryText');
+            const batteryReason = document.getElementById('batteryReason');
+
+            batteryAction.className = 'battery-action action-' + action.toLowerCase();
+
+            switch(action) {
+                case 'CHARGE':
+                    batteryText.textContent = '⚡ OPLADEN';
+                    break;
+                case 'DISCHARGE':
+                    batteryText.textContent = '🔋 ONTLADEN';
+                    break;
+                default:
+                    batteryText.textContent = '⏸️ VASTHOUDEN';
+            }
+
+            batteryReason.textContent = `Confidence: ${(currentPrice.confidence * 100).toFixed(0)}%`;
+        }
+
+        // Update chart
+        function updateChart() {
+            if (!chart || !predictions) return;
+
+            const hours = predictions.slice(0, currentView);
+            const labels = hours.map(p => {
+                const date = new Date(p.datetime);
+                return date.getHours() + ':00';
+            });
+
+            const data = hours.map(p => p.price_eur_mwh);
+
+            chart.data.labels = labels;
+            chart.data.datasets[0].data = data;
+            chart.update();
+        }
+
+        // Initialize controls
+        function initializeControls() {
+            // Chart view buttons
+            document.querySelectorAll('.chart-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelector('.chart-btn.active').classList.remove('active');
+                    this.classList.add('active');
+                    currentView = parseInt(this.dataset.hours);
+                    updateChart();
+                });
+            });
+
+            // Mode selector
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    document.querySelector('.mode-btn.active').classList.remove('active');
+                    this.classList.add('active');
+
+                    // Update configuration
+                    await updateConfig({operation_mode: this.dataset.mode});
+                });
+            });
+
+            // Sliders
+            const sliders = [
+                {id: 'chronosWeight', display: 'chronosValue', key: 'chronos_weight', suffix: ''},
+                {id: 'weatherWeight', display: 'weatherValue', key: 'weather_weight', suffix: ''},
+                {id: 'seasonalAdjustment', display: 'seasonalValue', key: 'seasonal_adjustment', suffix: '%'},
+                {id: 'weekendModifier', display: 'weekendValue', key: 'weekend_modifier', suffix: '%'}
+            ];
+
+            sliders.forEach(slider => {
+                const element = document.getElementById(slider.id);
+                const display = document.getElementById(slider.display);
+
+                element.addEventListener('input', function() {
+                    display.textContent = this.value + slider.suffix;
+                });
+
+                element.addEventListener('change', async function() {
+                    await updateConfig({[slider.key]: parseFloat(this.value)});
+                });
+            });
+        }
+
+        // Update configuration
+        async function updateConfig(params) {
+            try {
+                await fetch('/api/config', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(params)
+                });
+
+                // Reload predictions after config change
+                setTimeout(loadPredictions, 1000);
+            } catch (error) {
+                console.error('Error updating config:', error);
+            }
+        }
+
+        // Pull to refresh
+        function initializePullToRefresh() {
+            let startY = 0;
+            const pullToRefresh = document.getElementById('pullToRefresh');
+
+            document.addEventListener('touchstart', function(e) {
+                startY = e.touches[0].pageY;
+                isPulling = window.scrollY === 0;
+            });
+
+            document.addEventListener('touchmove', function(e) {
+                if (!isPulling) return;
+
+                pullDistance = e.touches[0].pageY - startY;
+
+                if (pullDistance > 0 && pullDistance < 150) {
+                    pullToRefresh.style.transform = `translateY(${Math.min(pullDistance, 60)}px)`;
+                }
+            });
+
+            document.addEventListener('touchend', function() {
+                if (pullDistance > 60) {
+                    pullToRefresh.classList.add('visible');
+                    loadPredictions().then(() => {
+                        setTimeout(() => {
+                            pullToRefresh.classList.remove('visible');
+                            pullToRefresh.style.transform = '';
+                        }, 500);
+                    });
+                } else {
+                    pullToRefresh.style.transform = '';
+                }
+
+                pullDistance = 0;
+                isPulling = false;
+            });
+        }
+
+        // PWA install
+        function checkPWAInstall() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js');
+            }
+
+            let deferredPrompt;
+            const installPrompt = document.getElementById('installPrompt');
+            const installBtn = document.getElementById('installBtn');
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                installPrompt.style.display = 'block';
+            });
+
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    deferredPrompt = null;
+                    installPrompt.style.display = 'none';
+                }
+            });
+        }
+
+        // Show loading
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('active', show);
+        }
+
+        // Show error
+        function showError(message) {
+            console.error(message);
+            // You could add a toast notification here
+        }
+    </script>
+</body>
+</html>
