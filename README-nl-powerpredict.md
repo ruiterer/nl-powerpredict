@@ -29,9 +29,9 @@ Een geavanceerd voorspellingssysteem voor Nederlandse elektriciteitsprijzen, geo
 
 ```bash
 # Download en installeer in één commando
-wget https://raw.githubusercontent.com/ruiterer/nl-powerpredict/main/install.sh
-chmod +x install.sh
-./install.sh
+wget https://raw.githubusercontent.com/ruiterer/nl-powerpredict/main/install-bulletproof.sh
+chmod +x install-bulletproof.sh
+./install-bulletproof.sh
 ```
 
 Na installatie is het systeem direct toegankelijk via:
